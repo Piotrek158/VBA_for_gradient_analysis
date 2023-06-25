@@ -1,8 +1,3 @@
-# VBA_for_gradient_analysis
-This VBA macro imports data from CSVs containing Stock prices history for individual stocks and performs gradient analysis and saves key values in newly created sheet
-
-VBA code:
-```VBA
 Sub Main()
     Dim csvFolderPath As String
     Dim xlsxFolderPath As String
@@ -64,7 +59,7 @@ Sub Main()
         
         ' Filter the table based on a specific date provided by the user
         Dim filterDate As Date
-        filterDate = InputBox("Please enter the date to filter the table (yyyy-mm-dd):")
+        filterDate = InputBox("Please enter the date to filter the table (yyyy-mm-dd) for file " & csvFile)
         
         ' Filter the table based on the date column
         With tbl.Range
@@ -138,7 +133,7 @@ End Sub
 Sub DataAnalysis2(ByVal wb As Workbook)
     Dim ws As Worksheet
     Dim ws1 As Worksheet
-    Dim LastRow As Long
+    Dim lastRow As Long
     Dim PeakRow As Long
     Dim DipRow As Long
     Dim PeakVal As Double
@@ -149,18 +144,33 @@ Sub DataAnalysis2(ByVal wb As Workbook)
     
     Checker = 0
     
+    ' Modify the following line to set the correct worksheet
     Set ws = wb.Sheets("Sheet1")
+    
     Set ws1 = wb.Sheets("Sheet2")
     DipVal = ws.Cells(2, "J").Value
-    LastRow = ws.Cells(ws.Rows.Count, "I").End(xlUp).Row
+    lastRow = ws.Cells(ws.Rows.Count, "I").End(xlUp).Row
     xfactor = (InputBox("Please enter the percent above which we consider peak/dip")) / 100
+    ws1.Cells(2, "B").Value = "initial low value"
     ws1.Cells(2, "C").Value = ws.Cells(2, "H").Value
     
-    For i = 2 To LastRow
+    ' Sort the data range by time column (column B) in ascending order
+    With ws.Sort
+        .SortFields.Clear
+        .SortFields.Add Key:=ws.Range("B2:B" & lastRow), SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+        .SetRange ws.Range("A1:V" & lastRow)
+        .Header = xlYes
+        .Apply
+    End With
+
+
+
+    
+    For i = 2 To lastRow
         If ws.Cells(i, "B").Value = TimeValue("09:30:00 AM") Then
-            ws1.Cells(3, "C").Value = ws.Cells(i - 1, "K").Value
+            ws1.Cells(3, "C").Value = ws.Cells(i - 1, "I").Value
             ws1.Cells(4, "C").Value = ws.Cells(i - 1, "T").Value
-            ws1.Cells(8, "C").Value = ws.Cells(i + 1, "K").Value
+            ws1.Cells(8, "C").Value = ws.Cells(i + 1, "I").Value
             ws1.Cells(9, "C").Value = ws.Cells(i + 1, "T").Value
             NineThirtyRow = i
         End If
@@ -184,16 +194,18 @@ Sub DataAnalysis2(ByVal wb As Workbook)
         End If
     Next i
     
+    ws1.Cells(3, "B").Value = "Value right before 9:30"
     ws1.Cells(5, "B").Value = "Minimum before 9:30"
     ws1.Cells(6, "B").Value = "Maximum before 9:30"
+    ws1.Cells(8, "B").Value = "Value right after 9:30"
     ws1.Cells(10, "B").Value = "Minimum after 9:30"
     ws1.Cells(11, "B").Value = "Maximum after 9:30"
     ws1.Cells(13, "B").Value = "Cumulutative val"
     ws1.Cells(5, "C").Value = WorksheetFunction.Min(ws.Range("J2:J" & NineThirtyRow - 1))
     ws1.Cells(6, "C").Value = WorksheetFunction.Max(ws.Range("I2:I" & NineThirtyRow - 1))
-    ws1.Cells(10, "C").Value = WorksheetFunction.Min(ws.Range("J" & NineThirtyRow + 1 & ":J" & LastRow))
-    ws1.Cells(11, "C").Value = WorksheetFunction.Max(ws.Range("I" & NineThirtyRow + 1 & ":I" & LastRow))
-    ws1.Cells(13, "C").Value = ws1.Cells(LastRow - 1, "T").Value
+    ws1.Cells(10, "C").Value = WorksheetFunction.Min(ws.Range("J" & NineThirtyRow + 1 & ":J" & lastRow))
+    ws1.Cells(11, "C").Value = WorksheetFunction.Max(ws.Range("I" & NineThirtyRow + 1 & ":I" & lastRow))
+    ws1.Cells(13, "C").Value = ws.Cells(lastRow, "R").Value
 
 End Sub
-```
+
